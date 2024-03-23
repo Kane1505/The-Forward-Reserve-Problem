@@ -10,6 +10,7 @@ import numpy as np
 import time
 import math
 import sys
+import copy
 
 # Start timer
 t1 = time.time()
@@ -25,13 +26,11 @@ epsilon = 0.0001
 threshold = 100
 
 # Import all data
-
-p = pd.read_pickle('Mean Daily Picks Poisson 10000.pkl')
+p = pd.read_pickle('Mean Daily Picks Normal 10000.pkl')
 s = pd.read_pickle('Max Units per Location Type 10000.pkl')
-psi = pd.read_pickle('Safety Stock in Locations Empirical 99 Poisson 10000.pkl')
-demand = pd.read_pickle('Poisson Demand 10000.pkl')
-theta = pd.read_pickle('Maximum Inventory Poisson 10000.pkl')
-
+psi = pd.read_pickle('Safety Stock in Locations Empirical 99 Normal 10000.pkl')
+demand = pd.read_pickle('Normal Demand 10000.pkl')
+theta = pd.read_pickle('Maximum Inventory Normal 10000.pkl')
 
 # Transform all data frames into numpy arrays
 p = p.to_numpy()
@@ -200,7 +199,6 @@ while iteration < len(du):
             if total_units_allocated > theta[i]:
                 # Calculate how many locations should be allocated to store maximal inventory and set this as the current solution
                 remaining_stock = theta[i]
-
                 final = 0
                 # For each location type...
                 for j in range(len(s[i])):
@@ -239,7 +237,10 @@ while iteration < len(du):
         sum_ = 0
         for m in M:
             sum_ += x[r,m]*s[r,m]
-        replenishments_sub += du[r]/(sum_ + epsilon)
+        if not_reached_max_stock[r] == 0: 
+            replenishments_sub += du[r] / theta[r]
+        else:
+            replenishments_sub += du[r]/(sum_ + epsilon)
     # Store this value
     replenishments[iteration] = replenishments_sub    
     # Calculate the extra picks per extra replenishment
@@ -363,13 +364,17 @@ while np.array_equal(prev_sol,cur_sol) == False and sum(not_reached_max_stock) !
             S_prime -= c[j]*cur_sol[i,j]
 # If the previous solution is equal to the new solution or all SKUs have max capacity, set x to the current solution
 x = cur_sol
+
 # Calculate the amount of replenishments needed
 replenishments_fin = 0
 for r in N_sub:
     sum_ = 0
     for m in M:
         sum_ += x[r,m]*s[r,m]
-    replenishments_fin += du[r]/(sum_ + epsilon)    
+    if not_reached_max_stock[r] == 0:
+        replenishments_fin += du[r]/ theta[r]
+    else:
+        replenishments_fin += du[r]/(sum_ + epsilon)   
 
 
 # Calculate the number of picks that are done

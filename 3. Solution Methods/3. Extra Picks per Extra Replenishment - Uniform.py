@@ -10,6 +10,7 @@ import numpy as np
 import time
 import math
 import sys
+import copy
 
 # Start timer
 t1 = time.time()
@@ -18,18 +19,18 @@ t1 = time.time()
 c = [1,0.5,0.25,0.125]
 
 # Define the total available space
-S = 16000
+S = 10000
 
 # Set epsilon and threshold
 epsilon = 0.0001
 threshold = 100
 
 # Import all data
-p = pd.read_pickle('Mean Daily Picks Case Study.pkl')
-s = pd.read_pickle('Max Units per Location Type Case Study.pkl')
-psi = pd.read_pickle('Safety Stock in Locations Empirical 99 Case Study.pkl')
-demand = pd.read_pickle('Demand Data Case Study Clean.pkl')
-theta = pd.read_pickle('Maximum Inventory Case Study.pkl')
+p = pd.read_pickle('Mean Daily Picks Normal 10000.pkl')
+s = pd.read_pickle('Max Units per Location Type 10000.pkl')
+psi = pd.read_pickle('Safety Stock in Locations Empirical 99 Normal 10000.pkl')
+demand = pd.read_pickle('Normal Demand 10000.pkl')
+theta = pd.read_pickle('Maximum Inventory Normal 10000.pkl')
 
 # Transform all data frames into numpy arrays
 p = p.to_numpy()
@@ -229,7 +230,10 @@ while iteration < len(du):
         sum_ = 0
         for m in M:
             sum_ += x[r,m]*s[r,m]
-        replenishments_sub += du[r]/(sum_ + epsilon)
+        if not_reached_max_stock[r] == 0: 
+            replenishments_sub += du[r] / theta[r]
+        else:
+            replenishments_sub += du[r]/(sum_ + epsilon)
     # Store this value
     replenishments[iteration] = replenishments_sub    
     # Calculate the extra picks per extra replenishment
@@ -355,8 +359,10 @@ for r in N_sub:
     sum_ = 0
     for m in M:
         sum_ += x[r,m]*s[r,m]
-    replenishments_fin += du[r]/(sum_ + epsilon)    
-
+    if not_reached_max_stock[r] == 0:
+        replenishments_fin += du[r]/ theta[r]
+    else:
+        replenishments_fin += du[r]/(sum_ + epsilon)   
 
 # Calculate the number of picks that are done
 picks = 0

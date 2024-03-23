@@ -22,14 +22,14 @@ S = 10000
 
 # Set epsilon and set the number of SKUs considered
 epsilon = 0.0001
-Number_of_SKUs = 686
+Number_of_SKUs = 5000
 
 # Import all data
-p = pd.read_pickle('Mean Daily Picks Exponential 10000.pkl')
-s = pd.read_pickle('Max Units per Location Type Exponential 10000.pkl')
-psi = pd.read_pickle('Safety Stock in Locations Empirical 99 Exponential 10000.pkl')
-demand = pd.read_pickle('Exponential Demand 10000.pkl')
-theta = pd.read_pickle('Maximum Inventory Exponential 10000.pkl')
+p = pd.read_pickle('Mean Daily Picks Normal 10000.pkl')
+s = pd.read_pickle('Max Units per Location Type 10000.pkl')
+psi = pd.read_pickle('Safety Stock in Locations Empirical 99 Normal 10000.pkl')
+demand = pd.read_pickle('Normal Demand 10000.pkl')
+theta = pd.read_pickle('Maximum Inventory Normal 10000.pkl')
 
 # Transform all data frames into numpy arrays
 p = p.to_numpy()
@@ -242,7 +242,10 @@ for r in N_sub:
     sum_ = 0
     for m in M:
         sum_ += x[r,m]*s[r,m]
-    replenishments_fin += du[r]/(sum_ + epsilon)    
+    if not_reached_max_stock[r] == 0:
+        replenishments_fin += du[r]/ theta[r]
+    else:
+        replenishments_fin += du[r]/(sum_ + epsilon)     
 
 
 # Calculate the number of picks that are done

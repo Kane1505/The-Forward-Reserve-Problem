@@ -19,19 +19,18 @@ t1 = time.time()
 c = [1,0.5,0.25,0.125]
 
 # Define the total available space
-S = 1000
+S = 10000
 
 # Set epsilon and set the number of SKUs considered
 epsilon = 0.0001
-Number_of_SKUs = 71
+Number_of_SKUs = 5000
 
 # Import all data
-p = pd.read_pickle('Mean Daily Picks Exponential 1000.pkl')
-s = pd.read_pickle('Max Units per Location Type Exponential 1000.pkl')
-psi = pd.read_pickle('Safety Stock in Locations Empirical 99 Exponential 1000.pkl')
-demand = pd.read_pickle('Exponential Demand 1000.pkl')
-theta = pd.read_pickle('Maximum Inventory Exponential 1000.pkl')
-
+p = pd.read_pickle('Mean Daily Picks Normal 10000.pkl')
+s = pd.read_pickle('Max Units per Location Type 10000.pkl')
+psi = pd.read_pickle('Safety Stock in Locations Empirical 99 Normal 10000.pkl')
+demand = pd.read_pickle('Normal Demand 10000.pkl')
+theta = pd.read_pickle('Maximum Inventory Normal 10000.pkl')
 
 # Transform all data frames into numpy arrays
 p = p.to_numpy()
@@ -127,6 +126,9 @@ psi = psi[:Number_of_SKUs,:]
 theta = theta[:Number_of_SKUs]
 SKUs = SKUs[:Number_of_SKUs]
 
+# Create a copy of theta to calcualte the total replenishments
+theta_original = copy.deepcopy(theta)
+
 # Set up a range for the total amount of location types
 M = range(len(c))
 
@@ -154,24 +156,32 @@ N_sub = range(len(SKUs))
 # Initialise vectors to keep track of the solution and to store the value of adding a new location to a SKU (add an extra row to the value matrix)
 x = np.zeros([len(SKUs), len(c)])
 v = np.zeros([len(SKUs)+1, len(c)])
-# Initialise x with the smallest feasible solution possible
+
+
+# Initialize the value matrix
 for i in N_sub:
-    for j in M:
-        if s[i,len(c)-j-1] != 0:
-            x[i,len(c)-j-1] = 1
-            break
-# For all SKUs that are considered in the current iteration
-for i in N_sub:
-    # Calculate the intial values of adding one location of type j to SKU i
-    sum_ = 0
-    for j in M:
-        sum_ += x[i,j]*s[i,j] 
-    for j in M:
-        v[i,j] = ((du[i]/(sum_ + s[i,j] * (1/c[j]) + epsilon)) - (du[i]/(sum_+epsilon)))
-        # If zero units fit on a location, set it to 1,000,000
-        if s[i,j] == 0:
-            v[i,j] = 1000000
-# Initialise a counter to keep track of the available space
+    for k in M:
+        # If location type k is considered that is not the smallest location on which units fit
+        if k != len(c)-1 and int(s[i,k+1]) != 0:
+            # If zero units fit, set value to a high number
+            if int(s[i,k]) == 0:
+                v[i,k] = 1000000
+            # If the amount of units that fit exceed the remaining inventory that can be placed, set value to a high number
+            elif s[i,k] > theta[i]:
+                v[i,k] = 1000000
+            # Else define value using the equation from the thesis
+            else:
+                v[i,k] = ((du[i]/(s[i,k] * (1/c[k]) + epsilon)) - (du[i]/(epsilon)))
+        # If the smallest location on which units can be placed is considered...
+        else:
+            # Set to a high number if no units fit
+            if int(s[i,k]) == 0:
+                v[i,k] = 1000000
+            # Otherwise use the value function provided in the thesis
+            else:
+                v[i,k] = ((du[i]/(s[i,k] * (1/c[k]) + epsilon)) - (du[i]/(epsilon)))
+                
+# Track the available space
 S_prime = S
 # For every SKUs that is considered in the current iteration
 for i in N_sub:
@@ -203,24 +213,37 @@ while S_prime > 0:
                 S_prime -= c[column]
                 # x vector is updated
                 x[row,column] += 1
-                # The amount of units of this particular SKU are calculated to see if the capacity of this SKU is reached
-                amount_of_units = 0
-                for k in M:
-                    amount_of_units += s[row,k]*x[row,k]
-                # If the capacity is reached, the value of the row is set to a very high number, so it is never selected over the extra row
-                if amount_of_units >= theta[row]:
+                # Reduce theta for the selected SKU by the number of extra units placed
+                theta[row] -= s[row,column]
+                # If theta is now negative, set all values to a high number
+                if theta[row] < 0:
                     for k in M:
                         v[row,k] = 1000000
-                # If the capacity is not reached, calculate the new values using the formula
+                # If theta is still positive...
                 else:
                     sum_ = 0
                     for k in M:
                         sum_ += x[row,k]*s[row,k]
                     for k in M:
-                        v[row,k] = ((du[row]/(sum_ + s[row,k] * (1/c[k]) + epsilon)) - (du[row]/(sum_+epsilon)))
-                        # If zero units fit on a location, set the value to 1000000
-                        if s[row,k] == 0:
-                            v[row,k] = 1000000
+                        # ...for all location except the smallest on which units still fit...
+                        if k != len(c)-1 and int(s[row,k+1]) != 0:
+                            # If zero units fit set the value to a high number
+                            if int(s[row,k]) == 0:
+                                v[row,k] = 1000000
+                            # If the amount of units that fit on the location type exceed theta, set the value to a high number
+                            elif s[row,k] > theta[row]:
+                                v[row,k] = 1000000
+                            # Else, set the value using the formula from the thesis
+                            else:
+                                v[row,k] = ((du[row]/(sum_ + s[row,k] * (1/c[k]) + epsilon)) - (du[row]/(sum_+epsilon)))
+                        # If the final feasible location is considered
+                        else:
+                            # Set value to a high number if zero units fit on the location
+                            if int(s[row,k]) == 0:
+                                v[row,k] = 1000000
+                            # Else, use the function from the thesis
+                            else:
+                                v[row,k] = ((du[row]/(sum_ + s[row,k] * (1/c[k]) + epsilon)) - (du[row]/(sum_+epsilon)))
                 break
         # If there is not enough space left to fill the smallest location, terminate this iteration
         elif S_prime < c[len(c)-1]:
@@ -233,7 +256,10 @@ for i in N_sub:
     sum_ = 0
     for j in M:
         sum_ += x[i,j]*s[i,j]
-    replenishments_fin += du[i]/(sum_ + epsilon)
+    if theta[i] < 0:
+        replenishments_fin += du[i] / theta_original[i]
+    else:
+        replenishments_fin += du[i]/(sum_ + epsilon)
 
 # Calculate the number of picks that are done
 picks = 0

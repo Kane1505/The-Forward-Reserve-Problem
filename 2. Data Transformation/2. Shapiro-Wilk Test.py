@@ -15,5 +15,6 @@ demand = demand[:,1:]
 pval = np.zeros(len(demand))
 for i in range(len(demand)):    
     pval[i] = scipy.stats.shapiro(demand[i])[1]
-    
-print(np.max(pval))
+
+print('The lowest p-value of all SKUs equals: ' + str(np.min(pval)))
+print('The highest p-value of all SKUs equals: ' + str(np.max(pval)))

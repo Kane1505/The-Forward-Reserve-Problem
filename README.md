@@ -32,6 +32,7 @@ Folder 1b. can be chosen if the aim is to test solution methods. This folder pro
 
 # 2. Data Transformation
 Folder 2. uses the data from the previous folders to calculate parameters that are important for the solution methods.
+
 -Program 1. calculates how many SKUs fit on each of the location types.
 
 -Program 2. applies the Shapiro-Wilk test on each SKU. This test aims to find out if the demand data is similar to a Normal distribution. The program returns the highest and the lowest p-value. If the lowest value is larger than critical value, it can be assumed that the demand of all SKUs resembles a Normal distribution closely enough to use the Normal distribution in subsequent steps. If the highest p-value is lower than the critical value, all SKUs do not resemble the Normal distribution close enough to use the Normal distribution in subsequent steps. Finally, if the lowest p-value is lower than the critical value, and the highest p-value is higher than the critical value, one or more SKUs resemble a Normal distribution, but the others do not. In this case, the choice can be made to not use the Normal distribution at all, or to make a distinction between the SKUs that do resemble the Normal distribution and SKUs that do not.

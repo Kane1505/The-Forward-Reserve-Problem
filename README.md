@@ -46,23 +46,23 @@ Folder 2. uses the data from the previous folders to calculate parameters that a
 # 3. Solution methods
 Folder 3. uses the data from the previous folders to find a solution for the forward-reserve problem. In these files the vector c, the total available space S, and either the EPER threshold or the size of the assignment need to be defined.
 
--Program 1. contains the main heuristic solution method presented in the thesis.
+-Program 01. contains the main heuristic solution method presented in the thesis.
 
--Program 2. combines the EPER assignment method with the Restock Reduction allocation heuristic.
+-Program 02. combines the EPER assignment method with the Restock Reduction allocation heuristic.
 
--Program 3. combines the EPER assignment method with the Uniform Allocation method.
+-Program 03. combines the EPER assignment method with the Uniform Allocation method.
 
--Program 4. combines the SKU Ranking assignment method with the One-by-One allocation heuristic.
+-Program 04. combines the SKU Ranking assignment method with the One-by-One allocation heuristic.
 
--Program 5. combines the SKU Ranking assignment method with the Restock Reduction allocation heuristic.
+-Program 05. combines the SKU Ranking assignment method with the Restock Reduction allocation heuristic.
 
--Program 6. combines the SKU Ranking assignment method with the Uniform Allocation method.
+-Program 06. combines the SKU Ranking assignment method with the Uniform Allocation method.
 
--Program 7. combines the Random Assignment method with the One-by-One allocation heuristic.
+-Program 07. combines the Random Assignment method with the One-by-One allocation heuristic.
 
--Program 8. combines the Random Assignment method with the Restock Reduction allocation heuristic.
+-Program 08. combines the Random Assignment method with the Restock Reduction allocation heuristic.
 
--Program 9. combines the Random Assignment method with the Uniform Allocation method.
+-Program 09. combines the Random Assignment method with the Uniform Allocation method.
 
 -Program 10. contains the exact optimization model.
 
